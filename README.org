@@ -1,0 +1,58 @@
+#+TITLE: Sample PR Parsing
+
+* The Problem
+We want to compare all the tests available in conformance.yaml with the tests run by a company to check their conformance, to see if all conformance tests were run by them.
+
+The company will use sonobuoy to verify conformance.  Sonobuoy will output an e2e.log and a junit_01.xml file as a result, which are then attached to the PR the company opens with the CNCF in the hopes of getting the conformance badge.
+ 
+/Can we compare the conformance tests with the company's junit file to see if all tests were run?  And can we do this simply, using just commmand line tools that could be installed in a container?/
+
+* Prerequisites
+  We'll be using [[https://stedolan.github.io/jq/][jq]] and [[https://github.com/mikefarah/yq][yq]], the json query tool and the yaml wrapper for jq, respectively.
+  We'll also use [[https://github.com/borkdude/babashka][babashka]], so we can run clojure as a shell script
+* Process
+** Getting a list of codenames from the conformance.yaml
+   the conformance.yaml is an array of test definitions, with each one including the test and its codename.  The codename will be how it appears in our junit.xml
+   We have a shell script called 'conformance-testnames.sh' that will grab the conformance.yaml and print just the test names to conformance-tests.txt
+   
+   #+begin_src 
+   ./conformance-testnames.sh
+   #+end_src
+   
+   We can then use wc to see how many tests there are with:
+   #+begin_src shell
+     cat conformance-tests.txt | wc -l
+   #+end_src
+
+   #+RESULTS:
+   : 277
+   There are 277 conformance tests in the 1.18 conformance.yaml
+** Getting a list of conformance tests from our junit
+   There's a shell script you can run called 'junit-conformance-tests.clj'
+   It is a clojure script, and so you will need to have babashka installed.
+   
+   This script grabs all the testnames from the junit run, filters it to just conformance tests, then prints it to junit-tests.json
+   
+   simply run
+   #+begin_src shell
+   ./junit-conformance-tests.clj
+   #+end_src
+   
+   We can then parse this with jq and do a line count to see how many tests there are here.
+   
+   #+begin_src shell
+   cat junit-tests.json | jq '.[]' | sort | uniq | wc -l
+   #+end_src
+
+   #+RESULTS:
+   : 277
+   
+   There are 277 in this run, which means  all conformance tests ran.  
+** Diffing between the conformance-tests and junit tests
+   If the numbers don't match up, you'll want to diff and see where the difference might be
+   #+begin_src shell
+     cat conformance-tests.json | sort > conformance.sorted
+     cat junit-tests.json | jq '.[]' | sort | uniq > junit.sorted
+     diff conformance.sorted junit.sorted
+   #+end_src
+   
