@@ -12,6 +12,7 @@ The company will use sonobuoy to verify conformance.  Sonobuoy will output an e2
   We'll also use [[https://github.com/borkdude/babashka][babashka]], so we can run clojure as a shell script
 * Process
 ** Getting a list of codenames from the conformance.yaml
+   
    the conformance.yaml is an array of test definitions, with each one including the test and its codename.  The codename will be how it appears in our junit.xml
    We have a shell script called 'conformance-testnames.sh' that will grab the conformance.yaml and print just the test names to conformance-tests.txt
    
@@ -26,8 +27,11 @@ The company will use sonobuoy to verify conformance.  Sonobuoy will output an e2
 
    #+RESULTS:
    : 277
+   
    There are 277 conformance tests in the 1.18 conformance.yaml
+   
 ** Getting a list of conformance tests from our junit
+   
    There's a shell script you can run called 'junit-conformance-tests.clj'
    It is a clojure script, and so you will need to have babashka installed.
    
@@ -48,8 +52,11 @@ The company will use sonobuoy to verify conformance.  Sonobuoy will output an e2
    : 277
    
    There are 277 in this run, which means  all conformance tests ran.  
+   
 ** Diffing between the conformance-tests and junit tests
+   
    If the numbers don't match up, you'll want to diff and see where the difference might be
+   
    #+begin_src shell
      cat conformance-tests.json | sort > conformance.sorted
      cat junit-tests.json | jq '.[]' | sort | uniq > junit.sorted
